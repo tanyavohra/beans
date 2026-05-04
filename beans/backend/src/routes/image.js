@@ -1,6 +1,5 @@
 const express = require("express");
 const multer = require("multer");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { auth } = require("../middleware/auth");
 
 const router = express.Router();
@@ -20,24 +19,50 @@ router.post("/summarize", auth, upload.single("image"), async (req, res) => {
     if (!process.env.GEMINI_API_KEY) return res.status(500).json({ error: "Missing GEMINI_API_KEY" });
     if (!req.file) return res.status(400).json({ error: "Missing image file (field name: image)" });
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
-    const model = genAI.getGenerativeModel({ model: modelName });
+    const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
     const prompt =
-      "Summarize this image in  4 to 5 lines, then give 1 sentence alt-text. Be concise.";
+      "Summarize this image in 4 to 5 lines, then give 1 sentence alt-text. Be concise.";
 
-    const result = await model.generateContent([
-      { text: prompt },
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
       {
-        inlineData: {
-          data: req.file.buffer.toString("base64"),
-          mimeType: req.file.mimetype,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": process.env.GEMINI_API_KEY,
         },
-      },
-    ]);
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  inlineData: {
+                    data: req.file.buffer.toString("base64"),
+                    mimeType: req.file.mimetype,
+                  },
+                },
+                { text: prompt },
+              ],
+            },
+          ],
+        }),
+      }
+    );
 
-    const text = result.response.text();
+    const data = await geminiRes.json().catch(() => null);
+    if (!geminiRes.ok) {
+      const message = data?.error?.message || "Gemini request failed";
+      return res.status(geminiRes.status).json({ error: message });
+    }
+
+    const text = data?.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text)
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+
+    if (!text) return res.status(502).json({ error: "Gemini returned no summary text" });
     return res.json({ summary: text });
   } catch {
     return res.status(500).json({ error: "Gemini summarize failed" });
