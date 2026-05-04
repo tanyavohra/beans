@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { apiJson } from "../api.js";
+import { apiJson, setToken } from "../api.js";
 
 export default function Login() {
   const nav = useNavigate();
@@ -12,7 +12,8 @@ export default function Login() {
     e.preventDefault();
     setErr("");
     try {
-      await apiJson("/auth/login", { method: "POST", body: { email, password } });
+      const data = await apiJson("/auth/login", { method: "POST", body: { email, password } });
+      setToken(data.token);
       nav("/dashboard");
     } catch (e2) {
       setErr(e2.message);
@@ -20,17 +21,28 @@ export default function Login() {
   }
 
   return (
-    <div style={{ maxWidth: 420, margin: "40px auto" }}>
-      <h2>Login</h2>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
-        <input placeholder="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input placeholder="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+    <main className="auth-shell">
+      <section className="auth-panel">
+        <p className="eyebrow">Image intelligence</p>
+        <h1>Welcome back</h1>
+        <p className="muted">Sign in to upload pictures and summarize them with Gemini.</p>
+      </section>
+      <form className="form-card" onSubmit={onSubmit}>
+        <h2>Login</h2>
+        <label>
+          Email
+          <input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </label>
+        <label>
+          Password
+          <input placeholder="Your password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        </label>
         <button type="submit">Login</button>
-        {err ? <div style={{ color: "crimson" }}>{err}</div> : null}
+        {err ? <div className="error">{err}</div> : null}
+        <p className="muted">
+          No account? <Link to="/register">Register</Link>
+        </p>
       </form>
-      <p>
-        No account? <Link to="/register">Register</Link>
-      </p>
-    </div>
+    </main>
   );
 }

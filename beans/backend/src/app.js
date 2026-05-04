@@ -1,10 +1,6 @@
 const cors = require("cors");
-const express = require('express');
-const app = express(); 
-module.exports = app;
+const express = require("express");
 const imageRoutes = require("./routes/image");
-app.use("/image", imageRoutes);
-
 const authRoutes = require("./routes/auth");
 
 function createApp() {
@@ -22,6 +18,7 @@ function createApp() {
   app.get("/health", (req, res) => res.json({ ok: true }));
 
   app.use("/auth", authRoutes);
+  app.use("/image", imageRoutes);
 
   return app;
 }
