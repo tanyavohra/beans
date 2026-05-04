@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { apiJson } from "../frontend/api.js";
 import Login from "../frontend/pages/login.jsx";

@@ -39,7 +39,7 @@ router.post("/summarize", auth, upload.single("image"), async (req, res) => {
 
     const text = result.response.text();
     return res.json({ summary: text });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "Gemini summarize failed" });
   }
 });

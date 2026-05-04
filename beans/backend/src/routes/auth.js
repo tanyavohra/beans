@@ -32,7 +32,7 @@ router.post("/register", async (req, res) => {
 
     const token = signToken(user._id.toString());
     return res.status(201).json({ token, user: { id: user._id, email: user.email } });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "server error" });
   }
 });
@@ -51,7 +51,7 @@ router.post("/login", async (req, res) => {
 
     const token = signToken(user._id.toString());
     return res.json({ token, user: { id: user._id, email: user.email } });
-  } catch (e) {
+  } catch {
     return res.status(500).json({ error: "server error" });
   }
 });
